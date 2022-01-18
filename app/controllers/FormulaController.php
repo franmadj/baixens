@@ -4,6 +4,17 @@ class FormulaController extends BaseController {
 
     private $viejos = array('codigo' => '0', 'seccion' => '0', 'nombre' => '0', 'nombre_formula' => '0', 'eq' => '0', 'activa' => '-1', 'search' => '');
 
+    function updateComponents() {
+
+        $formulas = Formula::all();
+        foreach ($formulas as $formula) {
+
+            $comp = (FormulasDetalle::where('idFormula', $formula->id)->count());
+            $formula->componentes = $comp;
+            $formula->save();
+        }
+    }
+
     function test() {
         //$formulas=Formula::with(array('formulasDetalle' => function($query){  
         //$query->where('numero', '=',321 );  
@@ -257,17 +268,17 @@ class FormulaController extends BaseController {
                 $this->viejos['codigo'] = $input['codigo'];
                 if ($filtrar_get or $imprimir or $excel_get) {
                     $formulas = $formulas->select([
-                                DB::raw('Max(formulas.parent) as parent'),
-                                DB::raw('Max(formulas.id) as id'),
-                                DB::raw('Max(formulas.numero) as numero'),
-                                DB::raw('count(formulas.esBase) as esBase'),
-                                DB::raw('Max(formulas.nombre) as nombre'),
-                                DB::raw('Max(formulas.numeroHija) as numeroHija'),
-                                DB::raw('Max(formulas.numero_sate) as numero_sate'),
-                        DB::raw('Max(formulas.idSeccionFormula) as idSeccionFormula'),
-                            ])
-                            ->join('formulas_detalle', 'formulas.id', '= ', 'formulas_detalle.idFormula')
-                            ->where('formulas_detalle.idProducto', $input['codigo'])->groupBy('formulas.id');
+                                        DB::raw('Max(formulas.parent) as parent'),
+                                        DB::raw('Max(formulas.id) as id'),
+                                        DB::raw('Max(formulas.numero) as numero'),
+                                        DB::raw('CAST(Max(CAST(formulas.esBase AS int)) As bit) as esBase'),
+                                        DB::raw('Max(formulas.nombre) as nombre'),
+                                        DB::raw('Max(formulas.numeroHija) as numeroHija'),
+                                        DB::raw('Max(formulas.numero_sate) as numero_sate'),
+                                        DB::raw('Max(formulas.idSeccionFormula) as idSeccionFormula'),
+                                    ])
+                                    ->join('formulas_detalle', 'formulas.id', '= ', 'formulas_detalle.idFormula')
+                                    ->where('formulas_detalle.idProducto', $input['codigo'])->groupBy('formulas.id');
                 } elseif ($excel_new_get or $imprimir) {
                     $formulas = $formulas
                             ->where('formulas_detalle.idProducto', $input['codigo']);
